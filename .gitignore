@@ -1,0 +1,54 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build artifacts
+bin/
+dist/
+build/
+vendor/
+
+# Go workspace
+go.work
+go.work.sum
+
+# Test coverage
+*.coverprofile
+coverage.txt
+coverage.html
+*.cover
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Dependencies
+go.sum.bak
+
+# Debug
+__debug_bin
+debug
+dlv
+
+# Air (live reload)
+tmp/
+.air.toml.bak
