@@ -1,0 +1,328 @@
+openapi: 3.0.3
+info:
+  title: Rockets API
+  description: REST API for tracking rocket states and missions
+  version: 1.0.0
+servers:
+  - url: http://localhost:8088
+    description: Local development server
+
+paths:
+  /messages:
+    post:
+      summary: Receive rocket state messages
+      description: Endpoint where the test program posts rocket state change messages
+      operationId: postMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RocketMessage'
+            examples:
+              rocketLaunched:
+                summary: Rocket Launched
+                value:
+                  metadata:
+                    channel: 193270a9-c9cf-404a-8f83-838e71d9ae67
+                    messageNumber: 1
+                    messageTime: "2022-02-02T19:39:05.86337+01:00"
+                    messageType: RocketLaunched
+                  message:
+                    type: Falcon-9
+                    launchSpeed: 500
+                    mission: ARTEMIS
+              rocketSpeedIncreased:
+                summary: Rocket Speed Increased
+                value:
+                  metadata:
+                    channel: 193270a9-c9cf-404a-8f83-838e71d9ae67
+                    messageNumber: 2
+                    messageTime: "2022-02-02T19:40:05.86337+01:00"
+                    messageType: RocketSpeedIncreased
+                  message:
+                    by: 3000
+              rocketSpeedDecreased:
+                summary: Rocket Speed Decreased
+                value:
+                  metadata:
+                    channel: 193270a9-c9cf-404a-8f83-838e71d9ae67
+                    messageNumber: 3
+                    messageTime: "2022-02-02T19:41:05.86337+01:00"
+                    messageType: RocketSpeedDecreased
+                  message:
+                    by: 2500
+              rocketExploded:
+                summary: Rocket Exploded
+                value:
+                  metadata:
+                    channel: 193270a9-c9cf-404a-8f83-838e71d9ae67
+                    messageNumber: 4
+                    messageTime: "2022-02-02T19:42:05.86337+01:00"
+                    messageType: RocketExploded
+                  message:
+                    reason: PRESSURE_VESSEL_FAILURE
+              rocketMissionChanged:
+                summary: Rocket Mission Changed
+                value:
+                  metadata:
+                    channel: 193270a9-c9cf-404a-8f83-838e71d9ae67
+                    messageNumber: 5
+                    messageTime: "2022-02-02T19:43:05.86337+01:00"
+                    messageType: RocketMissionChanged
+                  message:
+                    newMission: SHUTTLE_MIR
+      responses:
+        '200':
+          description: Message received successfully
+        '400':
+          description: Invalid message format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /rockets:
+    get:
+      summary: List all rockets
+      description: Returns a list of all rockets in the system with optional sorting
+      operationId: listRockets
+      parameters:
+        - name: sortBy
+          in: query
+          description: Field to sort by
+          required: false
+          schema:
+            type: string
+            enum:
+              - channel
+              - type
+              - speed
+              - mission
+              - status
+            default: channel
+        - name: order
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+      responses:
+        '200':
+          description: List of rockets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rockets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Rocket'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /rockets/{channel}:
+    get:
+      summary: Get rocket by channel
+      description: Returns the current state of a specific rocket
+      operationId: getRocket
+      parameters:
+        - name: channel
+          in: path
+          description: Unique channel ID of the rocket
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Rocket state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rocket'
+        '404':
+          description: Rocket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    RocketMessage:
+      type: object
+      required:
+        - metadata
+        - message
+      properties:
+        metadata:
+          $ref: '#/components/schemas/MessageMetadata'
+        message:
+          oneOf:
+            - $ref: '#/components/schemas/RocketLaunchedPayload'
+            - $ref: '#/components/schemas/RocketSpeedIncreasedPayload'
+            - $ref: '#/components/schemas/RocketSpeedDecreasedPayload'
+            - $ref: '#/components/schemas/RocketExplodedPayload'
+            - $ref: '#/components/schemas/RocketMissionChangedPayload'
+
+    MessageMetadata:
+      type: object
+      required:
+        - channel
+        - messageNumber
+        - messageTime
+        - messageType
+      properties:
+        channel:
+          type: string
+          format: uuid
+          description: Unique channel ID for the rocket
+        messageNumber:
+          type: integer
+          description: Order of the message within a channel
+        messageTime:
+          type: string
+          format: date-time
+          description: When the message was sent
+        messageType:
+          type: string
+          enum:
+            - RocketLaunched
+            - RocketSpeedIncreased
+            - RocketSpeedDecreased
+            - RocketExploded
+            - RocketMissionChanged
+
+    RocketLaunchedPayload:
+      type: object
+      required:
+        - type
+        - launchSpeed
+        - mission
+      properties:
+        type:
+          type: string
+          description: Type of rocket
+          example: Falcon-9
+        launchSpeed:
+          type: integer
+          description: Initial launch speed
+          example: 500
+        mission:
+          type: string
+          description: Mission name
+          example: ARTEMIS
+
+    RocketSpeedIncreasedPayload:
+      type: object
+      required:
+        - by
+      properties:
+        by:
+          type: integer
+          description: Amount by which speed increased
+          example: 3000
+
+    RocketSpeedDecreasedPayload:
+      type: object
+      required:
+        - by
+      properties:
+        by:
+          type: integer
+          description: Amount by which speed decreased
+          example: 2500
+
+    RocketExplodedPayload:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          description: Reason for explosion
+          example: PRESSURE_VESSEL_FAILURE
+
+    RocketMissionChangedPayload:
+      type: object
+      required:
+        - newMission
+      properties:
+        newMission:
+          type: string
+          description: New mission name
+          example: SHUTTLE_MIR
+
+    Rocket:
+      type: object
+      required:
+        - channel
+        - type
+        - speed
+        - mission
+        - status
+      properties:
+        channel:
+          type: string
+          format: uuid
+          description: Unique channel ID for the rocket
+        type:
+          type: string
+          description: Type of rocket
+          example: Falcon-9
+        speed:
+          type: integer
+          description: Current speed of the rocket
+          example: 3500
+        mission:
+          type: string
+          description: Current mission name
+          example: ARTEMIS
+        status:
+          type: string
+          enum:
+            - active
+            - exploded
+          description: Current status of the rocket
+        explosionReason:
+          type: string
+          description: Reason for explosion (if status is exploded)
+          example: PRESSURE_VESSEL_FAILURE
+        lastMessageNumber:
+          type: integer
+          description: Last processed message number
+        lastMessageTime:
+          type: string
+          format: date-time
+          description: Time of last processed message
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
