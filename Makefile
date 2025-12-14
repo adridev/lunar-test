@@ -1,4 +1,4 @@
-.PHONY: generate install-tools clean tidy build test
+.PHONY: generate install-tools clean tidy build test docker-build docker-up docker-down docker-logs
 
 generate:
 	@echo "Generating API code from OpenAPI spec..."
@@ -29,5 +29,23 @@ build: generate
 test:
 	@echo "Running tests..."
 	@go test -v ./...
+
+docker-build:
+	@echo "Building Docker images..."
+	@docker-compose -f docker/docker-compose.yml build
+	@echo "Docker build complete!"
+
+docker-up:
+	@echo "Starting services..."
+	@docker-compose -f docker/docker-compose.yml up -d
+	@echo "Services started!"
+
+docker-down:
+	@echo "Stopping services..."
+	@docker-compose -f docker/docker-compose.yml down
+	@echo "Services stopped!"
+
+docker-logs:
+	@docker-compose -f docker/docker-compose.yml logs -f
 
 .DEFAULT_GOAL := generate

@@ -101,12 +101,10 @@ paths:
           schema:
             type: string
             enum:
-              - channel
               - type
               - speed
               - mission
               - status
-            default: channel
         - name: order
           in: query
           description: Sort order
