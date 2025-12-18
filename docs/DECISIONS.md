@@ -23,14 +23,20 @@ efficient but a little more complex, so i decided to start with something.
 ## Trade-offs
 
 Testing: I decided to write a single end-to-end test to check the happy path, and later make it pass.
+
 Code structure: Normally I use a more explicit hexagonal architecture approach but for the sake of simplicity I decided
 simplify module structure and for example keep the infra code in the same file as the interfaces.
+
 Magic strings, numbers and hardcoded values: in a production ready app some stuff should be extracted to config files.
+
 Poor error modeling: More errors can be modeled
+
 Input validation: for a production ready app I would add input validation like negative speed...
 
 
 ## Future improvements
 Input validation.
+
 Moving to buffer approach to optimize memory and performance. Use redis as a buffer.
+
 Make the processing async to remove latency from the request.
